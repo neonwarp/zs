@@ -1,0 +1,63 @@
+name: Test and Release
+
+on:
+  push:
+    paths:
+      - zig.zon
+      - src/**
+      - build.zig
+    branches:
+      - main
+
+jobs:
+  test-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.14.1
+
+      - name: Run Zig tests
+        run: zig test src/main.zig
+
+      - name: Get previous zig.zon version
+        id: old_version
+        run: |
+          git show HEAD^:zig.zon | grep 'version' | head -1 | sed 's/.*"\(.*\)".*/\1/' > old_version.txt
+          echo "OLD_VERSION=$(cat old_version.txt)" >> $GITHUB_ENV
+
+      - name: Get new zig.zon version
+        id: new_version
+        run: |
+          grep 'version' zig.zon | head -1 | sed 's/.*"\(.*\)".*/\1/' > new_version.txt
+          echo "NEW_VERSION=$(cat new_version.txt)" >> $GITHUB_ENV
+
+      - name: Check if version changed
+        run: |
+          if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
+            echo "Version did not change. Skipping release."
+            echo "RELEASE=false" >> $GITHUB_ENV
+          else
+            echo "Version changed: $OLD_VERSION → $NEW_VERSION"
+            echo "RELEASE=true" >> $GITHUB_ENV
+          fi
+
+      - name: Create GitHub Release
+        if: env.RELEASE == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          name: v${{ env.NEW_VERSION }}
+          body: |
+            Automated release for version v${{ env.NEW_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
