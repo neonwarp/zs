@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const ArrayList = std.array_list;
+
 const Entry = struct {
     path: []const u8,
     rank: f64,
@@ -60,7 +62,11 @@ fn parseEntry(line: []const u8, allocator: std.mem.Allocator) !?Entry {
     const time = try std.fmt.parseInt(i64, time_str, 10);
 
     const copied_path = try allocator.dupe(u8, path);
-    return Entry{ .path = copied_path, .rank = rank, .time = time };
+    return Entry{
+        .path = copied_path,
+        .rank = rank,
+        .time = time,
+    };
 }
 
 test "parseEntry" {
@@ -88,33 +94,48 @@ fn loadEntries(allocator: std.mem.Allocator, path: []const u8) ![]Entry {
     };
     defer file.close();
 
-    var stream = std.io.bufferedReader(file.reader());
-    var lines = std.ArrayList(Entry).init(allocator);
+    var buffer: [1024]u8 = undefined;
+    const reader = file.reader(&buffer);
+    var r = reader.interface;
+
+    var writer = std.io.Writer.Allocating.init(allocator);
+    defer writer.deinit();
+
+    var lines = ArrayList.Managed(Entry).init(allocator);
 
     while (true) {
-        const maybe_line = stream.reader().readUntilDelimiterOrEofAlloc(allocator, '\n', 10_000) catch break;
+        const maybe_line = r.streamDelimiter(&writer.writer, '\n');
 
-        const line = maybe_line orelse break;
+        if (maybe_line) |_| {
+            const line = writer.written();
 
-        if (try parseEntry(line, allocator)) |entry| {
-            try lines.append(entry);
+            if (try parseEntry(line, allocator)) |entry| {
+                try lines.append(entry);
+            }
+
+            writer.clearRetainingCapacity();
+            r.toss(1);
+        } else |err| switch (err) {
+            error.EndOfStream => break,
+            else => return err,
         }
-
-        allocator.free(line);
     }
 
     return lines.toOwnedSlice();
 }
 
-fn saveEntries(path: []const u8, entries: []Entry) !void {
+fn saveEntries(path: []const u8, entries: []Entry, allocator: std.mem.Allocator) !void {
     var file = try std.fs.cwd().createFile(path, .{});
     defer file.close();
 
-    var writer = file.writer();
+    var writer = std.io.Writer.Allocating.init(allocator);
+    defer writer.deinit();
 
     for (entries) |entry| {
-        try writer.print("{s}|{}|{}\n", .{ entry.path, entry.rank, entry.time });
+        try writer.writer.print("{s}|{}|{}\n", .{ entry.path, entry.rank, entry.time });
     }
+
+    try writer.writer.flush();
 }
 
 pub fn main() !void {
@@ -150,12 +171,16 @@ pub fn main() !void {
         }
 
         if (!found) {
-            const new_entry = Entry{ .path = try allocator.dupe(u8, path), .rank = 1, .time = now };
+            const new_entry = Entry{
+                .path = try allocator.dupe(u8, path),
+                .rank = 1,
+                .time = now,
+            };
             entries = try allocator.realloc(entries, entries.len + 1);
             entries[entries.len - 1] = new_entry;
         }
 
-        try saveEntries(datafile, entries);
+        try saveEntries(datafile, entries, allocator);
         return;
     }
 
@@ -180,12 +205,13 @@ pub fn main() !void {
         }
     }
 
-    const stdout = std.io.getStdOut().writer();
+    var writer = std.Io.Writer.Allocating.init(allocator);
+    defer writer.deinit();
 
     if (best) |b| {
-        try stdout.print("{s}\n", .{b.path});
+        try writer.writer.print("{s}\n", .{b.path});
     } else {
-        try stdout.print("No match\n", .{});
+        try writer.writer.print("No match\n", .{});
         std.process.exit(1);
     }
 }
