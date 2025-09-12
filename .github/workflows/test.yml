@@ -12,23 +12,28 @@ jobs:
         os: [windows-latest]
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - uses: goto-bus-stop/setup-zig@v2
       - run: zig build test
 
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - uses: goto-bus-stop/setup-zig@v2
       - run: zig fmt --check .
 
   powershell-tests:
-    name: PowerShell Pester Tests
     runs-on: windows-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
+
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v2
+
+      - name: Build zs.exe
+        run: zig build
 
       - name: Install Pester
         run: Install-Module -Name Pester -Force -Scope CurrentUser
