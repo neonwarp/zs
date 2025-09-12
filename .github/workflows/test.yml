@@ -14,6 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
       - run: zig build test
 
   lint:
@@ -21,6 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
       - run: zig fmt --check .
 
   powershell-tests:
@@ -31,6 +35,8 @@ jobs:
 
       - name: Install Zig
         uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
 
       - name: Build zs.exe
         run: zig build
