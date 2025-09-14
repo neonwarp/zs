@@ -10,12 +10,21 @@ if (-not $global:OriginalPrompt) {
 
 function z {
     param($arg)
-    $result = (& $global:ZS_EXE_PATH query -- $arg).Trim()
-    if ($LASTEXITCODE -eq 0 -and (Test-Path $result)) {
-        Set-Location $result
+    $result = (& $global:ZS_EXE_PATH query -- $arg)
+
+    if ($null -eq $result) {
+        Write-Host "zs returned no output"
+        return
     }
     else {
-        Write-Host "No match for '$arg'"
+        $result = $result.Trim()
+
+        if ($LASTEXITCODE -eq 0 -and (Test-Path $result)) {
+            Set-Location $result
+        }
+        else {
+            Write-Host "No match for '$arg'"
+        }
     }
 }
 
