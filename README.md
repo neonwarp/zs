@@ -8,6 +8,10 @@ A blazing-fast, minimal clone of [`z`](https://github.com/rupa/z), rewritten in 
 - Integrates with **PowerShell** without breaking your existing prompt (e.g. Starship)
 - Remembers directory usage and lets you jump by fuzzy substring
 
+## 🧭 Motivation
+
+I built this because the existing directory-jump tools I tried kept breaking or behaving unpredictably on my Windows Dev Drive setup.
+
 ## 📦 Installation
 
 1. **Download `zs.exe`**
