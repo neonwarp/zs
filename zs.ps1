@@ -31,21 +31,23 @@ function z {
     }
 }
 
-function global:prompt {
-    if ($global:OriginalPrompt) {
-        & $global:OriginalPrompt
-    }
-
-    $current = (Get-Location).ProviderPath
-    if ($global:ZS_LastPath -ne $current) {
-        $global:ZS_LastPath = $current
-        try {
-            & $global:ZS_EXE_PATH --add $current | Out-Null
+if (-not $env:ZS_DISABLE_PROMPT) {
+    function global:prompt {
+        if ($global:OriginalPrompt) {
+            & $global:OriginalPrompt
         }
-        catch {
-            Write-Debug "Failed to add path to ZS: $_"
-        }
-    }
 
-    return "$(Get-Location)> "
+        $current = (Get-Location).ProviderPath
+        if ($global:ZS_LastPath -ne $current) {
+            $global:ZS_LastPath = $current
+            try {
+                & $global:ZS_EXE_PATH --add $current | Out-Null
+            }
+            catch {
+                Write-Debug "Failed to add path to ZS: $_"
+            }
+        }
+
+        return "$(Get-Location)> "
+    }
 }
