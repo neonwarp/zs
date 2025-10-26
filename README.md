@@ -16,7 +16,7 @@ I built this because the existing directory-jump tools I tried kept breaking or 
 
 1. **Download `zs.exe`**
 
-   - Download the prebuilt Zig binary: [`zs.exe`](#) (or build it yourself from `src/main.zig`)
+   - Download the prebuilt Zig binary: [`zs.exe`](https://github.com/neonwarp/zs/releases/latest) (or build it yourself from `src/main.zig`)
    - Place it in any folder (e.g. `C:\zs\zs.exe`)
 
 2. **Add `zs.ps1` to your PowerShell profile**

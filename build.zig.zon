@@ -1,6 +1,6 @@
 .{
     .name = .zs,
-    .version = "1.0.0",
+    .version = "1.0.1",
     .fingerprint = 0x5d05a305453b3edf,
     .minimum_zig_version = "0.15.2",
 

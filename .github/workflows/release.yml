@@ -44,13 +44,48 @@ jobs:
         run: |
           set -e
           mkdir -p dist
+
           if [ -f "zig-out-windows/bin/$BINARY_NAME.exe" ]; then
             cp zig-out-windows/bin/$BINARY_NAME.exe dist/${BINARY_NAME}-windows-x86_64.exe
           else
             echo "Binary not found"; exit 1
           fi
+
+          if [ -f "zs.ps1" ]; then
+            cp zs.ps1 dist/zs.ps1
+          else
+            echo "WARNING: zs.ps1 not found in repo root" >&2
+          fi
+
           (cd dist && for f in *; do sha256sum "$f" > "$f".sha256; done)
           ls -l dist
+
+      - name: Generate changelog
+        run: |
+          set -e
+          mkdir -p dist
+
+          NEW_TAG="v${{ inputs.version }}"
+          PREV_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found. Using full history."
+            {
+              echo "# Changes for $NEW_TAG"
+              echo ""
+              git log --pretty=format:"* %s (%h)"
+            } > dist/CHANGELOG.md
+          else
+            echo "Previous tag: $PREV_TAG"
+            {
+              echo "# Changes for $NEW_TAG"
+              echo ""
+              git log "${PREV_TAG}..HEAD" --pretty=format:"* %s (%h)" --no-merges
+            } > dist/CHANGELOG.md
+          fi
+          echo ""
+          echo "Changelog preview:"
+          sed -n '1,40p' dist/CHANGELOG.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -59,8 +94,7 @@ jobs:
           name: v${{ inputs.version }}
           draft: ${{ inputs.draft }}
           prerelease: ${{ inputs.prerelease }}
-          body: |
-            Manual release for version v${{ inputs.version }}
+          body_path: dist/CHANGELOG.md
           files: dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
