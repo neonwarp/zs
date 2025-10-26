@@ -19,7 +19,6 @@ jobs:
       - uses: goto-bus-stop/setup-zig@v2
         with:
           version: ${{ env.ZIG_VERSION }}
-          cache: true
       - run: zig build test
 
   lint:
