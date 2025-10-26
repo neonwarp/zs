@@ -66,7 +66,7 @@ Describe "z function" {
         Set-ZSStub -Body "echo $script:MockPath"
         z first
         z second
-        (Get-Location).Path | Should -Be "C:\MockPath"
+        (Get-Location).Path | Should -Be $script:MockPath
     }
 
     AfterAll {
