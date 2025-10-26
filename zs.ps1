@@ -9,13 +9,25 @@ if (-not $global:OriginalPrompt) {
 }
 
 function z {
-    param($arg)
-    $result = (& $global:ZS_EXE_PATH query -- $arg).Trim()
-    if ($LASTEXITCODE -eq 0 -and (Test-Path $result)) {
-        Set-Location $result
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Arg
+    )
+
+    $result = & $global:ZS_EXE_PATH $Arg
+
+    if ([string]::IsNullOrWhiteSpace($result)) {
+        Write-Host "No match for '$Arg'"
+        return
+    }
+
+    $result = $result.Trim()
+
+    if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $result)) {
+        Set-Location -LiteralPath $result
     }
     else {
-        Write-Host "No match for '$arg'"
+        Write-Host "No match for '$Arg'"
     }
 }
 

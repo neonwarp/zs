@@ -24,7 +24,7 @@ jobs:
       - name: Install Zig
         uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.14.1
+          version: 0.15.2
 
       - name: Run Zig tests
         run: zig test src/main.zig
@@ -52,7 +52,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: env.RELEASE == 'true'
+        if: ${{ env.RELEASE == 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.NEW_VERSION }}

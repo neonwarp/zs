@@ -1,0 +1,49 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [windows-latest]
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+      - run: zig build test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+      - run: zig fmt --check .
+
+  # powershell-tests:
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v5
+
+  #     - name: Install Zig
+  #       uses: goto-bus-stop/setup-zig@v2
+  #       with:
+  #         version: 0.15.2
+
+  #     - name: Build zs.exe
+  #       run: zig build
+
+  #     - name: Install Pester
+  #       run: Install-Module -Name Pester -Force -Scope CurrentUser
+
+  #     - name: Run Pester Tests
+  #       run: |
+  #         Invoke-Pester -Script './zs.test.ps1' -Output Detailed

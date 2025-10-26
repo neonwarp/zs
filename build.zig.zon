@@ -2,7 +2,7 @@
     .name = .zs,
     .version = "0.1.0",
     .fingerprint = 0x5d05a305453b3edf,
-    .minimum_zig_version = "0.14.1",
+    .minimum_zig_version = "0.15.2",
 
     .dependencies = .{},
 
